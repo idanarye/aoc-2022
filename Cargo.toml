@@ -9,4 +9,5 @@ edition = "2021"
 [dependencies]
 aoc-main = { git = "https://github.com/remi-dupre/aoc.git" , branch = "main" }
 hashbrown = "0.13.1"
+itertools = "0.10.5"
 regex = "1.7.0"

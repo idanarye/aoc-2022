@@ -77,6 +77,7 @@ function T:go()
     f:flush()
     local path = ('/proc/%s/fd/%s'):format(vim.fn.getpid(), ffi.C.fileno(f))
     vim.cmd'botright new'
+    vim.cmd.startinsert()
     channelot.terminal_job{'cargo', 'run', '--', '--day', vim.fn.max(gen_all_implemented_days()), '--file', path}:wait()
     f:close()
 end
