@@ -70,14 +70,11 @@ function T:demonstration_input()
 end
 
 function T:go()
-    ffi.cdef'int fileno(struct FILE* stream);'
-    local f = io.tmpfile()
-    f:write(T:demonstration_input())
-    f:write('\n')
-    f:flush()
-    local path = ('/proc/%s/fd/%s'):format(vim.fn.getpid(), ffi.C.fileno(f))
+    local data = T:demonstration_input()
     vim.cmd'botright new'
     vim.cmd.startinsert()
-    channelot.terminal_job{'cargo', 'run', '--', '--day', vim.fn.max(gen_all_implemented_days()), '--file', path}:wait()
-    f:close()
+    local j = channelot.terminal_job{'cargo', 'run', '--', '--day', vim.fn.max(gen_all_implemented_days()), '--stdin'}
+    j:write(data)
+    j:write('\n\4')
+    j:wait()
 end
