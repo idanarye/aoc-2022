@@ -44,8 +44,8 @@ impl RoundResult {
     }
 
     fn when_playing_against(&self, opponent: Shape) -> Shape {
-        use Shape::*;
         use RoundResult::*;
+        use Shape::*;
         match (self, opponent) {
             (Lose, Rock) => Scissors,
             (Lose, Paper) => Rock,
@@ -70,8 +70,8 @@ impl Shape {
     }
 
     fn play_against(&self, other: Shape) -> RoundResult {
-        use Shape::*;
         use RoundResult::*;
+        use Shape::*;
         match (self, other) {
             (Rock, Rock) => Draw,
             (Rock, Paper) => Lose,
@@ -99,22 +99,28 @@ impl RoundStrategy {
     }
 
     fn score2(&self) -> usize {
-        self.desired.when_playing_against(self.opponent).shape_score() + self.desired.result_score()
+        self.desired
+            .when_playing_against(self.opponent)
+            .shape_score()
+            + self.desired.result_score()
     }
 }
 
 pub fn generator(input: &str) -> Vec<RoundStrategy> {
-    input.lines().map(|line| {
-        let mut it = line.chars();
-        let opponent = it.next().unwrap().into();
-        it.next().unwrap();
-        let other_param = it.next().unwrap();
-        RoundStrategy {
-            opponent,
-            your: other_param.into(),
-            desired: other_param.into(),
-        }
-    }).collect()
+    input
+        .lines()
+        .map(|line| {
+            let mut it = line.chars();
+            let opponent = it.next().unwrap().into();
+            it.next().unwrap();
+            let other_param = it.next().unwrap();
+            RoundStrategy {
+                opponent,
+                your: other_param.into(),
+                desired: other_param.into(),
+            }
+        })
+        .collect()
 }
 
 pub fn part_1(input: &[RoundStrategy]) -> usize {
