@@ -35,7 +35,8 @@ dependencies = [
 [[package]]
 name = "aoc-main"
 version = "0.4.1"
-source = "git+https://github.com/remi-dupre/aoc.git?branch=main#3e1b0006262c1ae6ff228989fdb8f6d9c5f259ca"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "62d5083e3889fa15a9b6bccbd83284df128a050a0c0c2a4562f96544ace6b3e3"
 dependencies = [
  "attohttpc",
  "clap",
