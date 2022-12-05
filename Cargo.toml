@@ -7,7 +7,7 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-aoc-main = "0.4.1"
+aoc-main = "0.5.0"
 hashbrown = "0.13.1"
 itertools = "0.10.5"
 regex = "1.7.0"
