@@ -20,6 +20,10 @@ function gen_all_implemented_days()
     return result
 end
 
+function T:clean()
+    vim.cmd'!cargo clean'
+end
+
 function T:check()
     vim.cmd'Erun! cargo check -q'
 end
@@ -65,6 +69,7 @@ function T:add_day()
     vim.cmd.checktime()
 end
 
+T{alias=':3'}
 function T:demonstration_input()
     return self:cached_data_cell{}
 end
@@ -77,4 +82,8 @@ function T:go()
     j:write(data)
     j:write('\n\4')
     j:wait()
+end
+
+function T:run_cargo_fmt()
+    vim.cmd'!cargo fmt'
 end
