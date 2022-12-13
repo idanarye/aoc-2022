@@ -9,7 +9,7 @@ pub enum Token {
     Close,
 }
 
-#[derive(Debug, PartialEq, Eq, Ord)]
+#[derive(Debug, PartialEq, Eq)]
 pub enum Packet {
     Number(usize),
     List(Vec<Packet>),
@@ -94,28 +94,34 @@ impl Packet {
     }
 }
 
-impl PartialOrd for Packet {
-    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+impl Ord for Packet {
+    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
         match (self, other) {
-            (Packet::Number(num1), Packet::Number(num2)) => num1.partial_cmp(num2),
-            (p1 @ Packet::Number(_), p2 @ Packet::List(_)) => p1.num_to_list().partial_cmp(p2),
-            (p1 @ Packet::List(_), p2 @ Packet::Number(_)) => p1.partial_cmp(&p2.num_to_list()),
+            (Packet::Number(num1), Packet::Number(num2)) => num1.cmp(num2),
+            (p1 @ Packet::Number(_), p2 @ Packet::List(_)) => p1.num_to_list().cmp(p2),
+            (p1 @ Packet::List(_), p2 @ Packet::Number(_)) => p1.cmp(&p2.num_to_list()),
             (Packet::List(list1), Packet::List(list2)) => list1
                 .iter()
                 .zip_longest(list2)
                 .find_map(|pair| {
                     use itertools::EitherOrBoth;
                     match pair {
-                        EitherOrBoth::Both(item1, item2) => match item1.partial_cmp(item2) {
-                            Some(Ordering::Equal) => None,
-                            ord => ord,
+                        EitherOrBoth::Both(item1, item2) => match item1.cmp(item2) {
+                            Ordering::Equal => None,
+                            ord => Some(ord),
                         },
                         EitherOrBoth::Left(_) => Some(Ordering::Greater),
                         EitherOrBoth::Right(_) => Some(Ordering::Less),
                     }
                 })
-                .or(Some(Ordering::Equal)),
+                .unwrap_or(Ordering::Equal),
         }
+    }
+}
+
+impl PartialOrd for Packet {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        Some(self.cmp(other))
     }
 }
 

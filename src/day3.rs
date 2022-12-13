@@ -46,7 +46,7 @@ pub fn part_1(input: &[Rucksack]) -> usize {
 struct ElvesGroup([Rucksack; 3]);
 
 impl ElvesGroup {
-    fn elf_items<'a>(&'a self, elf_idx: usize) -> impl 'a + Iterator<Item = char> {
+    fn elf_items(&self, elf_idx: usize) -> impl '_ + Iterator<Item = char> {
         self.0[elf_idx].0.iter().copied()
     }
 

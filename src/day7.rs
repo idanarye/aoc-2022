@@ -21,7 +21,7 @@ pub fn generator(input: &str) -> Vec<Instruction> {
     let mut result = Vec::new();
     let mut dir_content: Option<Vec<DirItem>> = None;
     for line in input.lines() {
-        let mut parts = line.split(" ");
+        let mut parts = line.split(' ');
         match parts.next().unwrap() {
             "$" => {
                 if let Some(dir_content) = dir_content.take() {

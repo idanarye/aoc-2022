@@ -125,7 +125,7 @@ impl Arrangement {
 pub fn part_1((arrangement, commands): &Input) -> String {
     let mut arrangement = arrangement.clone();
     for command in commands {
-        arrangement.apply_command(&command, true);
+        arrangement.apply_command(command, true);
     }
     arrangement.code()
 }
@@ -133,7 +133,7 @@ pub fn part_1((arrangement, commands): &Input) -> String {
 pub fn part_2((arrangement, commands): &Input) -> String {
     let mut arrangement = arrangement.clone();
     for command in commands {
-        arrangement.apply_command(&command, false);
+        arrangement.apply_command(command, false);
     }
     arrangement.code()
 }

@@ -72,7 +72,7 @@ impl<T> VMatrix<T> {
         }
     }
 
-    pub fn neighbors_no_diag<'a>(&'a self, node: usize) -> impl 'a + Iterator<Item = usize> {
+    pub fn neighbors_no_diag(&self, node: usize) -> impl '_ + Iterator<Item = usize> {
         let x = (node % self.cols) as isize;
         let y = (node / self.cols) as isize;
         [[0, -1], [1, 0], [0, 1], [-1, 0]]

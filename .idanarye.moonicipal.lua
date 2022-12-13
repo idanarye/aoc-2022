@@ -87,3 +87,7 @@ end
 function T:run_cargo_fmt()
     vim.cmd'!cargo fmt'
 end
+
+function T:clippy()
+    vim.cmd'Erun! cargo clippy -q'
+end

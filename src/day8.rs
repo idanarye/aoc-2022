@@ -32,7 +32,7 @@ pub fn generator(input: &str) -> Forest {
                 cols = cur_col;
                 cur_col = 0;
                 None
-            } else if '0' <= c && c <= '9' {
+            } else if ('0'..='9').contains(&c) {
                 cur_col += 1;
                 Some(c as usize - '0' as usize)
             } else {
@@ -56,11 +56,7 @@ impl Forest {
         Some(x as usize + y as usize * self.cols)
     }
 
-    fn walk_indices<'a>(
-        &'a self,
-        start: [isize; 2],
-        dir: [isize; 2],
-    ) -> impl 'a + Iterator<Item = usize> {
+    fn walk_indices(&self, start: [isize; 2], dir: [isize; 2]) -> impl '_ + Iterator<Item = usize> {
         let mut pos = start;
         from_fn(move || {
             let idx = self.to_idx(pos)?;

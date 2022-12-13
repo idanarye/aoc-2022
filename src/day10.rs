@@ -13,7 +13,7 @@ pub fn generator(input: &str) -> Vec<Instruction> {
             if line == "noop" {
                 Instruction::Noop
             } else {
-                Instruction::AddX(line.split(" ").last().unwrap().parse().unwrap())
+                Instruction::AddX(line.split(' ').last().unwrap().parse().unwrap())
             }
         })
         .collect()

@@ -7,8 +7,8 @@ pub fn generator(input: &str) -> Vec<PairRanges> {
     input
         .lines()
         .map(|line| {
-            let mut it = line.split(",").map(|elf| {
-                let mut it = elf.split("-");
+            let mut it = line.split(',').map(|elf| {
+                let mut it = elf.split('-');
                 it.next().unwrap().parse().unwrap()..=it.next().unwrap().parse().unwrap()
             });
             PairRanges([it.next().unwrap(), it.next().unwrap()])

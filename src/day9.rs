@@ -29,7 +29,7 @@ pub fn generator(input: &str) -> Vec<MovementInstruction> {
     input
         .lines()
         .map(|line| {
-            let mut parts = line.split(" ");
+            let mut parts = line.split(' ');
             let direction = match parts.next().unwrap() {
                 "L" => Direcetion::Left,
                 "R" => Direcetion::Right,
