@@ -1,7 +1,5 @@
 use std::fmt::{Display, Write};
 
-use itertools::Itertools;
-
 use crate::bfs::LinearBfs;
 use crate::vmatrix::VMatrix;
 

@@ -2,6 +2,7 @@ use std::collections::VecDeque;
 use std::ops::Add;
 
 struct BfsCell<P, C> {
+    #[allow(unused)]
     parent: Option<P>,
     cost: C,
 }
