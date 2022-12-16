@@ -2,7 +2,6 @@ use std::collections::VecDeque;
 use std::ops::Add;
 
 struct BfsCell<P, C> {
-    #[allow(unused)]
     parent: Option<P>,
     cost: C,
 }
@@ -53,5 +52,16 @@ where
             cost: new_cost,
         });
         true
+    }
+
+    pub fn path_to(&self, key: usize) -> Vec<usize> {
+        let mut result = Vec::new();
+        let mut currentlly_at = Some(key);
+        while let Some(at) = currentlly_at {
+            result.push(at);
+            currentlly_at = self.cells[at].as_ref().unwrap().parent;
+        }
+        result.reverse();
+        result
     }
 }
