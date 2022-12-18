@@ -1,5 +1,5 @@
 use std::fmt::{Display, Write};
-use std::iter::{repeat, from_fn};
+use std::iter::{from_fn, repeat};
 use std::ops::{Index, IndexMut};
 
 use hashbrown::HashMap;
@@ -30,7 +30,7 @@ struct BrickPattern {
     contact_right: &'static [[usize; 2]],
 }
 
-const BRICK_PATTERNS: &'static [BrickPattern] = &[
+const BRICK_PATTERNS: &[BrickPattern] = &[
     BrickPattern {
         pattern: &[&[true, true, true, true]],
         contact_down: &[[0, 0], [1, 0], [2, 0], [3, 0]],
@@ -103,6 +103,15 @@ impl Arena {
             &self.rocks[row_start..row_start + self.cols]
         } else {
             &self.fake_row
+        }
+    }
+
+    fn top_rows(&self, num_rows: usize) -> &[bool] {
+        let num_cells = num_rows * self.cols;
+        if self.rocks.len() < num_cells {
+            &self.rocks
+        } else {
+            &self.rocks[self.rocks.len() - num_cells..]
         }
     }
 
@@ -188,7 +197,6 @@ impl State {
         for (r, brick_row) in pattern.pattern.iter().enumerate() {
             for (c, rock) in brick_row.iter().enumerate() {
                 if *rock {
-                    // let cell = &mut self.arena.rocks[self.arena.cols * (y + r) + (x + c)];
                     let cell = &mut self.arena[[x + c, y + r]];
                     assert!(!*cell);
                     *cell = true;
@@ -201,25 +209,27 @@ impl State {
         let (pattern, [x, y]) = self.current.as_mut().unwrap();
         match jet {
             Jet::Left => {
-                if *x <= 0 || self.arena.has_collision([*x - 1, *y], pattern.contact_left) {
+                if *x == 0 || self.arena.has_collision([*x - 1, *y], pattern.contact_left) {
                     return;
                 }
                 *x -= 1;
             }
             Jet::Right => {
-                if self.arena.cols <= *x + pattern.pattern[0].len() || self.arena.has_collision([*x + 1, *y], pattern.contact_right) {
+                if self.arena.cols <= *x + pattern.pattern[0].len()
+                    || self
+                        .arena
+                        .has_collision([*x + 1, *y], pattern.contact_right)
+                {
                     return;
                 }
                 *x += 1;
-                // for (r, brick_row) in pattern.pattern.iter().enumerate() {
-                // }
             }
         }
     }
 
     fn drop_brick(&mut self) -> bool {
         let (pattern, [x, y]) = self.current.as_mut().unwrap();
-        if *y <= 0 || self.arena.has_collision([*x, *y - 1], pattern.contact_down) {
+        if *y == 0 || self.arena.has_collision([*x, *y - 1], pattern.contact_down) {
             false
         } else {
             *y -= 1;
@@ -229,7 +239,7 @@ impl State {
 }
 
 pub fn solve_for(input: &[Jet], total_bricks: usize) -> usize {
-    type Key = (usize, usize);
+    type Key = (usize, usize, Vec<bool>);
 
     #[derive(Debug, Clone)]
     struct Step {
@@ -238,57 +248,67 @@ pub fn solve_for(input: &[Jet], total_bricks: usize) -> usize {
     }
 
     let mut state = State::new(7);
+    let initial_key = (0, 0, state.arena.top_rows(0).to_owned());
     let mut jets = input.iter().enumerate().cycle().peekable();
     let mut steps = HashMap::<Key, Step>::new();
     let mut step_to_add = None;
-    let cycle_starts_at = BRICK_PATTERNS.iter().enumerate().cycle().take(1000000).find_map(|(brick_num, brick_pattern)| {
-        let first_jet_num = jets.peek().unwrap().0;
-        let key = (brick_num, first_jet_num);
-        if let Some((prev_key, added_rows)) = step_to_add.take() {
-            if let Some(old_step) = steps.get(&prev_key) {
-                TODO: Find another thing that can be used to track the cycle.
-                assert!(old_step.added_rows == added_rows);
-                assert!(old_step.got_to_key == key);
+    let cycle_starts_at = BRICK_PATTERNS
+        .iter()
+        .enumerate()
+        .cycle()
+        .take(1000000)
+        .find_map(|(brick_num, brick_pattern)| {
+            let first_jet_num = jets.peek().unwrap().0;
+            let key = (brick_num, first_jet_num, state.arena.top_rows(1).to_owned());
+            if let Some((prev_key, added_rows)) = step_to_add.take() {
+                steps.insert(
+                    prev_key,
+                    Step {
+                        added_rows,
+                        got_to_key: key.clone(),
+                    },
+                );
             }
-            steps.insert(prev_key, Step {
-                added_rows,
-                got_to_key: key,
-            });
-        }
-        if steps.contains_key(&key) {
-            if false {
+            if steps.contains_key(&key) {
                 return Some(key);
             }
-        }
 
-        state.set_brick(brick_pattern, [2, state.arena.rows() + 3]);
-        for (_, jet) in jets.by_ref() {
-            state.push_brick(*jet);
-            let could_fall = state.drop_brick();
-            if !could_fall {
-                break;
+            state.set_brick(brick_pattern, [2, state.arena.rows() + 3]);
+            for (_, jet) in jets.by_ref() {
+                state.push_brick(*jet);
+                let could_fall = state.drop_brick();
+                if !could_fall {
+                    break;
+                }
             }
-        }
-        let rows_before = state.arena.rows();
-        state.freeze_brick();
-        let added_rows = state.arena.rows() - rows_before;
+            let rows_before = state.arena.rows();
+            state.freeze_brick();
+            let added_rows = state.arena.rows() - rows_before;
 
-        step_to_add = Some((key, added_rows));
-        None
-    }).unwrap();
+            step_to_add = Some((key, added_rows));
+            None
+        })
+        .unwrap();
 
     let run_steps_from = |mut key: Key| {
         let steps = &steps;
         from_fn(move || {
             let step = steps[&key].clone();
-            key = step.got_to_key;
+            key = step.got_to_key.clone();
             Some(step)
         })
     };
 
     let calc_upto_cycle = |key: Key| {
         let mut num_rows = 0;
-        for (num_bricks, Step { added_rows, got_to_key }) in run_steps_from(key).enumerate() {
+        for (
+            num_bricks,
+            Step {
+                added_rows,
+                got_to_key,
+            },
+        ) in run_steps_from(key).enumerate()
+        {
             num_rows += added_rows;
             if got_to_key == cycle_starts_at {
                 return (num_bricks + 1, num_rows);
@@ -297,14 +317,17 @@ pub fn solve_for(input: &[Jet], total_bricks: usize) -> usize {
         panic!()
     };
 
-    let (one_time_bricks, one_time_rows) = calc_upto_cycle((0, 0));
-    let (per_cycle_bricks, per_cycle_rows) = calc_upto_cycle(cycle_starts_at);
+    let (one_time_bricks, one_time_rows) = calc_upto_cycle(initial_key);
+    let (per_cycle_bricks, per_cycle_rows) = calc_upto_cycle(cycle_starts_at.clone());
 
     let bricks_added_in_cycles = total_bricks - one_time_bricks;
     let num_cycles = bricks_added_in_cycles / per_cycle_bricks;
 
     let bricks_added_in_partial_cycle = bricks_added_in_cycles % per_cycle_bricks;
-    let rows_added_in_partial_cycle: usize = run_steps_from(cycle_starts_at).take(bricks_added_in_partial_cycle).map(|step| step.added_rows).sum();
+    let rows_added_in_partial_cycle: usize = run_steps_from(cycle_starts_at)
+        .take(bricks_added_in_partial_cycle)
+        .map(|step| step.added_rows)
+        .sum();
 
     one_time_rows + num_cycles * per_cycle_rows + rows_added_in_partial_cycle
 }
