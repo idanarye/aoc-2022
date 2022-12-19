@@ -5,6 +5,18 @@ local ffi = require'ffi'
 
 local channelot = require'channelot'
 
+T{alias=':2'}
+function T:build_profile()
+    local cc = self:cached_choice{key = vim.inspect}
+    cc('dev')
+    cc('release')
+    return cc:select()
+end
+
+function T:query()
+    dump({T:build_profile()})
+end
+
 function gen_all_implemented_days()
     local result = {}
     local pattern = vim.regex[=[\v^day\zs\d+\ze\.rs$]=]
@@ -25,22 +37,22 @@ function T:clean()
 end
 
 function T:check()
-    vim.cmd'Erun! cargo check -q'
+    vim.cmd('Erun! cargo check -q --profile ' .. T:build_profile())
 end
 
 function T:build()
-    vim.cmd'Erun! cargo build -q'
+    vim.cmd('Erun! cargo build -q --profile ' .. T:build_profile())
 end
 
 function T:run()
     vim.cmd'botright new'
-    channelot.terminal_job{'cargo', 'run', '--', '--day', vim.fn.max(gen_all_implemented_days())}
+    channelot.terminal_job{'cargo', 'run', '--profile', T:build_profile(), '--', '--day', vim.fn.max(gen_all_implemented_days())}
     vim.cmd.startinsert()
 end
 
 function T:act()
     vim.cmd'botright new'
-    channelot.terminal_job{'cargo', 'run'}
+    channelot.terminal_job{'cargo', 'run', '--profile', T:build_profile()}
     vim.cmd.startinsert()
 end
 
@@ -78,7 +90,7 @@ function T:go()
     local data = T:demonstration_input() or moonicipal.abort('No demonstration input')
     vim.cmd'botright new'
     vim.cmd.startinsert()
-    local j = channelot.terminal_job{'cargo', 'run', '--', '--day', vim.fn.max(gen_all_implemented_days()), '--stdin'}
+    local j = channelot.terminal_job{'cargo', 'run', '--profile', T:build_profile(), '--', '--day', vim.fn.max(gen_all_implemented_days()), '--stdin'}
     j:write(data)
     j:write('\n\4')
     j:wait()
