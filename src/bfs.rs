@@ -132,7 +132,7 @@ where
     // result
     // }
 
-    // pub fn all_known(&self) -> impl Iterator<Item = &K> {
-    // self.cells.keys()
-    // }
+    pub fn all_known(&self) -> impl Iterator<Item = &K> {
+        self.cells.keys()
+    }
 }
