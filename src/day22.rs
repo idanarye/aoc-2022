@@ -120,14 +120,20 @@ impl Direction {
 
     fn turn(&self, times_cw: isize) -> Direction {
         Direction::all()[(self.idx() as isize + times_cw).rem_euclid(4) as usize]
-
     }
 
-    fn try_move_once(&self, [r, c]: [usize; 2], rows_range: Range<usize>, cols_range: Range<usize>) -> Option<[usize; 2]> {
+    fn try_move_once(
+        &self,
+        [r, c]: [usize; 2],
+        rows_range: Range<usize>,
+        cols_range: Range<usize>,
+    ) -> Option<[usize; 2]> {
         match self {
             Direction::Right => (c + 1 < cols_range.end).then_some([r, c + 1]),
             Direction::Down => (r + 1 < rows_range.end).then_some([r + 1, c]),
+            #[allow(clippy::unnecessary_lazy_evaluations)]
             Direction::Left => (cols_range.start < c).then(|| [r, c - 1]),
+            #[allow(clippy::unnecessary_lazy_evaluations)]
             Direction::Up => (rows_range.start < r).then(|| [r - 1, c]),
         }
     }
@@ -173,13 +179,20 @@ impl<'a> State<'a> {
         }
     }
 
-    fn apply_instruction(&mut self, instruction: &Instruction, mut wrap_dlg: impl FnMut([usize; 2], Direction) -> ([usize; 2], Direction)) {
+    fn apply_instruction(
+        &mut self,
+        instruction: &Instruction,
+        mut wrap_dlg: impl FnMut([usize; 2], Direction) -> ([usize; 2], Direction),
+    ) {
         match instruction {
             Instruction::Walk(num_steps) => {
                 for _ in 0..*num_steps {
                     let cols_range = &self.map.rows[self.pos[0]].0;
                     let rows_range = &self.map.col_ranges[self.pos[1]];
-                    let (new_pos, new_direction) = if let Some(new_pos) = self.direction.try_move_once(self.pos, rows_range.clone(), cols_range.clone()) {
+                    let (new_pos, new_direction) = if let Some(new_pos) = self
+                        .direction
+                        .try_move_once(self.pos, rows_range.clone(), cols_range.clone())
+                    {
                         (new_pos, self.direction)
                     } else {
                         wrap_dlg(self.pos, self.direction)
@@ -228,8 +241,14 @@ const CUBE_SIDE_LINKS: [[usize; 4]; 6] = [
     /*5 -    top*/ [1, 4, 3, 2],
 ];
 
-pub fn part_2((board_map, _instruction): &(BoardMap, Vec<Instruction>)) -> usize {
-    let face_side = (board_map.rows.iter().map(|(range, _)| range.len()).sum::<usize>() / 6).sqrt();
+pub fn part_2((board_map, instructions): &(BoardMap, Vec<Instruction>)) -> usize {
+    let face_side = (board_map
+        .rows
+        .iter()
+        .map(|(range, _)| range.len())
+        .sum::<usize>()
+        / 6)
+    .sqrt();
     for (range, _) in board_map.rows.iter() {
         assert_eq!(range.start % face_side, 0);
         assert_eq!(range.end % face_side, 0);
@@ -242,7 +261,8 @@ pub fn part_2((board_map, _instruction): &(BoardMap, Vec<Instruction>)) -> usize
     let f_rows = board_map.rows.len() / face_side;
     let f_cols = board_map.col_ranges.len() / face_side;
     let mut faces_by_position: Vec<Vec<Option<(usize, usize)>>> = vec![vec![None; f_cols]; f_rows];
-    let relevant_face_positions = (0..f_rows).flat_map(move |r| (0..f_cols).map(move |c| [r, c]))
+    let relevant_face_positions = (0..f_rows)
+        .flat_map(move |r| (0..f_cols).map(move |c| [r, c]))
         .filter(|[r, c]| board_map[[r * face_side, c * face_side]].is_some())
         .collect_vec();
     {
@@ -254,52 +274,69 @@ pub fn part_2((board_map, _instruction): &(BoardMap, Vec<Instruction>)) -> usize
             if faces_by_position[r][c].is_some() {
                 continue;
             }
+            #[allow(clippy::never_loop)]
             for direction in Direction::all() {
                 let Some([nr, nc]) = direction.try_move_once([r, c], 0..f_rows, 0..f_cols) else { continue };
                 let Some((n_face, n_orientation)) = faces_by_position[nr][nc] else { continue };
                 let face_idx = CUBE_SIDE_LINKS[n_face][(direction.idx() + 2 + n_orientation) % 4];
-                let face_orientation = (0..4).find(|orientation| {
-                    CUBE_SIDE_LINKS[face_idx][(direction.idx() + orientation) % 4] == n_face
-                }).unwrap();
+                let face_orientation = (0..4)
+                    .find(|orientation| {
+                        CUBE_SIDE_LINKS[face_idx][(direction.idx() + orientation) % 4] == n_face
+                    })
+                    .unwrap();
                 faces_by_position[r][c] = Some((face_idx, face_orientation));
                 continue 'resolving;
             }
         }
         break;
     }
-    println!("{:?}", faces_by_position);
-    if true {return 0}
-    let positions_by_faces = faces_by_position.iter().enumerate().flat_map(|(fr, row)| {
-        row.iter().enumerate().filter_map(move |(fc, face_info)| {
-            let (face_idx, face_orientation) = (*face_info)?;
-            Some((face_idx, [fr, fc], face_orientation))
+    let positions_by_faces = faces_by_position
+        .iter()
+        .enumerate()
+        .flat_map(|(fr, row)| {
+            row.iter().enumerate().filter_map(move |(fc, face_info)| {
+                let (face_idx, face_orientation) = (*face_info)?;
+                Some((face_idx, [fr, fc], face_orientation))
+            })
         })
-    })
-    .sorted()
+        .sorted()
         .map(|(_, pos, orientation)| (pos, orientation))
-    .collect_vec();
+        .collect_vec();
     let mut state = State::new(board_map);
-    state.pos = [5, 11];
-    // state.pos = [11, 10];
-    // state.direction = Direction::Down;
-    println!("{}", state);
-    println!("===");
-    state.apply_instruction(&Instruction::Walk(1), |pos, direction| {
-        let [fr, fc] = pos.map(|n| n / face_side);
-        dbg!([fr, fc]);
-        let (current_face_idx, current_face_orientation) = faces_by_position[fr][fc].unwrap();
-        dbg!(current_face_idx);
-        let new_face_idx = CUBE_SIDE_LINKS[current_face_idx][(direction.idx() + current_face_orientation) % 4];
-        dbg!(new_face_idx);
-        let ([nr, nc], n_orientation) = positions_by_faces[new_face_idx];
-        dbg!((nr, nc, n_orientation));
-        let [or, oc] = pos.map(|n| n % face_side);
-        dbg!([or, oc]);
+    for instruction in instructions.iter() {
+        state.apply_instruction(instruction, |pos, direction| {
+            let [fr, fc] = pos.map(|n| n / face_side);
+            let (current_face_idx, current_face_orientation) = faces_by_position[fr][fc].unwrap();
+            let new_face_idx =
+                CUBE_SIDE_LINKS[current_face_idx][(direction.idx() + current_face_orientation) % 4];
+            let ([nr, nc], n_orientation) = positions_by_faces[new_face_idx];
+            let [or, oc] = pos.map(|n| n % face_side);
 
-        let orientation_shift = (4 + n_orientation - current_face_orientation) % 4;
+            let idx_in_cube_side_link = CUBE_SIDE_LINKS[new_face_idx]
+                .iter()
+                .position(|idx| *idx == current_face_idx)
+                .unwrap();
+            let new_direction =
+                Direction::all()[(idx_in_cube_side_link + 4 - n_orientation + 2) % 4];
 
-        (pos, direction.turn(orientation_shift as isize))
-    });
-    println!("{}", state);
-    0
+            let oriented_offset = match direction {
+                Direction::Right => or,
+                Direction::Down => face_side - 1 - oc,
+                Direction::Left => face_side - 1 - or,
+                Direction::Up => oc,
+            };
+
+            let [nor, noc] = match new_direction {
+                Direction::Right => [oriented_offset, 0],
+                Direction::Down => [0, face_side - 1 - oriented_offset],
+                Direction::Left => [face_side - 1 - oriented_offset, face_side - 1],
+                Direction::Up => [face_side - 1, oriented_offset],
+            };
+
+            let new_pos = [nr * face_side + nor, nc * face_side + noc];
+
+            (new_pos, new_direction)
+        });
+    }
+    state.calc_password()
 }
