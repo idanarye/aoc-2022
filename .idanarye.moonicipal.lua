@@ -90,7 +90,9 @@ function T:go()
     local data = T:demonstration_input() or moonicipal.abort('No demonstration input')
     vim.cmd'botright new'
     vim.cmd.startinsert()
-    local j = channelot.terminal_job{'cargo', 'run', '--profile', T:build_profile(), '--', '--day', vim.fn.max(gen_all_implemented_days()), '--stdin'}
+    local j = channelot.terminal_job({
+        RUST_BACKTRACE = 1,
+    }, {'cargo', 'run', '--profile', T:build_profile(), '--', '--day', vim.fn.max(gen_all_implemented_days()), '--stdin'})
     j:write(data)
     j:write('\n\4')
     j:wait()
