@@ -121,16 +121,17 @@ where
         true
     }
 
-    // pub fn path_to(&self, key: &K) -> Vec<K> {
-    // let mut result = Vec::new();
-    // let mut currentlly_at = Some(key);
-    // while let Some(at) = currentlly_at {
-    // result.push(at.clone());
-    // currentlly_at = self.cells.get(at).unwrap().parent.as_ref();
-    // }
-    // result.reverse();
-    // result
-    // }
+    #[allow(unused)]
+    pub fn path_to(&self, key: &K) -> Vec<K> {
+        let mut result = Vec::new();
+        let mut currentlly_at = Some(key);
+        while let Some(at) = currentlly_at {
+            result.push(at.clone());
+            currentlly_at = self.cells.get(at).unwrap().parent.as_ref();
+        }
+        result.reverse();
+        result
+    }
 
     pub fn all_known(&self) -> impl Iterator<Item = &K> {
         self.cells.keys()
