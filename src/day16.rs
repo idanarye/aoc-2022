@@ -19,7 +19,6 @@ pub fn generator(input: &str) -> Vec<ValveDescription> {
     input
         .lines()
         .map(|line| {
-            println!("Line {:?}", line);
             let captures = pattern.captures(line).unwrap();
             ValveDescription {
                 name: captures[1].to_owned(),
